@@ -4,6 +4,8 @@ const cookie = require("cookie");
 const userModel = require("../models/user.model");
 const aiService = require("../service/ai.service");
 const messageModel = require("../models/message.model");
+const { createMemory, queryMemory } = require("../service/vector.service");
+const { text } = require("express");
 
 function initSocketServer(httpServer) {
   const io = new Server(httpServer, {});
@@ -30,31 +32,64 @@ function initSocketServer(httpServer) {
     socket.on("ai-msg", async (messagePayLoad) => {
       console.log(messagePayLoad);
 
-await messageModel.create({
-  chat:messagePayLoad.chat,
-  user:socket.user._id,
-  content:messagePayLoad.content,
-  role:"user"
-})
+      const message = await messageModel.create({
+        chat: messagePayLoad.chat,
+        user: socket.user._id,
+        content: messagePayLoad.content,
+        role: "user",
+      });
 
-const chatHistory = await messageModel.find({
-  chat:messagePayLoad.chat,
-});
+      const vectors = await aiService.generateVector(messagePayLoad.content);
 
-      const response = await aiService.generateResponse(chatHistory.map(item=>{    //kyoki hume sirf content or role chahiye
-  return {
-    role:item.role,
-     text:item.content
-  }
-  }));
-      
 
-await messageModel.create({
-  chat:messagePayLoad.chat,
-  user:socket.user._id,
-  content:response,
-  role:"model"
-})
+       const queryMemoryResult = await queryMemory(vectors, 3, {});
+      console.log("Query Memory Result:", queryMemoryResult);
+
+      await createMemory({
+        vectors: vectors,
+        messageId: message._id,
+        metadata: {
+          chatId: messagePayLoad.chat,
+          user: socket.user._id,
+          text: messagePayLoad.content,
+        },
+      });
+
+      const chatHistory = await messageModel
+        .find({
+          chat: messagePayLoad.chat,
+        })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .lean();
+
+      const response = await aiService.generateResponse(
+        chatHistory.map((item) => {
+          //kyoki hume sirf content or role chahiye
+          return {
+            role: item.role,
+            parts: [{ text: item.content }],
+          };
+        })
+      );
+
+      const responseMessage = await messageModel.create({
+        chat: messagePayLoad.chat,
+        user: socket.user._id,
+        content: response,
+        role: "model",
+      });
+
+      const responseVectors = await aiService.generateVector(response);
+      await createMemory({
+        vectors: responseVectors,
+        messageId: responseMessage._id,
+        metadata: {
+          chatId: messagePayLoad.chat,
+          user: socket.user._id,
+          text: response,
+        },
+      });
 
       socket.emit("ai-msg-response", {
         content: response,
