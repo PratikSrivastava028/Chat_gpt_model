@@ -6,6 +6,7 @@ const aiService = require("../service/ai.service");
 const messageModel = require("../models/message.model");
 const { createMemory, queryMemory } = require("../service/vector.service");
 const { text } = require("express");
+require("dotenv").config();
 
 function initSocketServer(httpServer) {
   const io = new Server(httpServer, {});
@@ -41,8 +42,7 @@ function initSocketServer(httpServer) {
 
       const vectors = await aiService.generateVector(messagePayLoad.content);
 
-
-       const queryMemoryResult = await queryMemory(vectors, 3, {});
+      const queryMemoryResult = await queryMemory(vectors, 3, {user:socket.user._id});
       console.log("Query Memory Result:", queryMemoryResult);
 
       await createMemory({
@@ -55,23 +55,39 @@ function initSocketServer(httpServer) {
         },
       });
 
-      const chatHistory = await messageModel
+      const chatHistory = (await messageModel
         .find({
           chat: messagePayLoad.chat,
         })
         .sort({ createdAt: -1 })
         .limit(20)
-        .lean();
+        .lean()).reverse();
 
-      const response = await aiService.generateResponse(
-        chatHistory.map((item) => {
-          //kyoki hume sirf content or role chahiye
-          return {
-            role: item.role,
-            parts: [{ text: item.content }],
-          };
-        })
-      );
+      const stm = chatHistory.map((item) => {
+        //kyoki hume sirf content or role chahiye
+        return {
+          role: item.role,
+          parts: [{ text: item.content }],
+        };
+      });
+
+      const ltm = [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `
+    These are some previous messages from chat ,use them to generate response:
+    ${queryMemoryResult.map((item) => item.metadata.text).join("\n")}`,
+            },
+          ],
+        },
+      ];
+
+      console.log(ltm[0]);
+      console.log(stm);
+
+      const response = await aiService.generateResponse([...ltm, ...stm]);
 
       const responseMessage = await messageModel.create({
         chat: messagePayLoad.chat,

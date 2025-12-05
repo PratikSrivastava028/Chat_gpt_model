@@ -17,7 +17,7 @@ async function createMemory({ vectors, metadata, messageId }) {
   ]);
 }
 
-async function queryMemory(queryVector, limit=5, metadata){
+async function queryMemory(queryVector, limit=5, metadata,user){
 
     const data = await pineIndexName.query({
         vector: queryVector,
