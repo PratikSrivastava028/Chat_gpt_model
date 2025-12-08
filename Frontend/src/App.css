@@ -9,3 +9,52 @@ html,body{
   width: 100%;
 
 }
+
+/* Messages + typing indicator */
+.messages{ padding: 18px; display:flex; flex-direction:column; gap:12px; overflow:auto; }
+.message{ max-width: 78%; padding: 12px 14px; border-radius: 10px; background: #f3f4f6; position:relative; }
+.message-user{ align-self: flex-end; background: #0b93f6; color: #fff; }
+.message-ai{ align-self: flex-start; background: #f3f4f6; color: #111; }
+.message-time{ font-size:11px; opacity:0.6; margin-top:6px; }
+
+.message-typing .message-body{ background: transparent; padding: 6px 0; }
+.typing-dots{ display:inline-flex; gap:8px; align-items:center; height:18px; }
+.dot{ width:8px; height:8px; background:#cfcfcf; border-radius:50%; display:inline-block; animation: blink 1s infinite ease-in-out; }
+.dot:nth-child(2){ animation-delay: 0.12s; }
+.dot:nth-child(3){ animation-delay: 0.24s; }
+
+@keyframes blink{
+  0%{ transform: translateY(0); opacity:0.28 }
+  30%{ transform: translateY(-4px); opacity:1 }
+  60%{ transform: translateY(0); opacity:0.5 }
+  100%{ transform: translateY(0); opacity:0.28 }
+}
+
+/* Disabled send button visual */
+.composer-send[disabled], .hero-action[disabled]{ opacity:0.5; cursor:not-allowed; transform:none; }
+
+/* Sidebar sizing (more compact) */
+.chat-sidebar{
+  width: 240px; /* reduced from wider defaults */
+  min-width: 56px;
+  transition: width 320ms cubic-bezier(.2,.9,.2,1);
+}
+.chat-container.sidebar-collapsed .chat-sidebar{
+  width: 64px; /* collapsed state */
+}
+
+/* Compact input sizing */
+.hero-input, .composer-input{
+  height: 30px; /* slightly shorter */
+  line-height: 14px;
+  padding: 6px 8px; /* reduced vertical padding */
+  font-size: 13px;
+  border-radius: 7px;
+}
+
+.composer-input{ max-width: 640px; }
+
+@media (max-width: 767px){
+  .chat-sidebar{ width: 80%; }
+  .hero-input, .composer-input{ height: 28px; font-size:13px; }
+}
