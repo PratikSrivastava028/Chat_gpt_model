@@ -1,0 +1,42 @@
+/* Centralized theme variables for light and dark modes */
+:root{
+  --bg: #ffffff;
+  --text: #0f1722;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --accent-contrast: #ffffff;
+  --card-bg: #f8fafc;
+  --input-bg: #ffffff;
+  --input-border: #e6e9ee;
+  --radius: 10px;
+  --shadow: 0 6px 18px rgba(16,24,40,0.06);
+}
+
+/* Dark theme when `data-theme="dark"` is present on <html> or <body> */
+[data-theme="dark"]{
+  --bg: #0b1220;
+  --text: #e6eef8;
+  --muted: #98a0b3;
+  --accent: #60a5fa;
+  --accent-contrast: #0b1220;
+  --card-bg: #071026;
+  --input-bg: #071026;
+  --input-border: #112033;
+  --radius: 10px;
+  --shadow: 0 6px 22px rgba(2,6,23,0.6);
+}
+
+/* Utility: prefers-color-scheme fallback */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme]){
+    --bg: #0b1220;
+    --text: #e6eef8;
+    --muted: #98a0b3;
+    --accent: #60a5fa;
+    --accent-contrast: #0b1220;
+    --card-bg: #071026;
+    --input-bg: #071026;
+    --input-border: #112033;
+    --shadow: 0 6px 22px rgba(2,6,23,0.6);
+  }
+}
